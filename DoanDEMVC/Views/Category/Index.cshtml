@@ -1,0 +1,80 @@
+﻿@model IEnumerable<BusinessObjects.Category>
+@{
+    ViewData["Title"] = "Manage Categories";
+}
+
+<h2>Category Management</h2>
+
+@if (TempData["ErrorMsg"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMsg"]</div>
+}
+
+<button class="btn btn-success mb-3" onclick="openModal(null)">Create New Category</button>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.CategoryID</td>
+                <td>@item.CategoryName</td>
+                <td>@item.CategoryDesciption</td>
+                <td>@(item.IsActive == true ? "Active" : "Inactive")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="openModal(@item.CategoryID)">Edit</button>
+                    <!-- JS Confirmation Dialog cho Delete -->
+                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this Category?');">
+                        <input type="hidden" name="id" value="@item.CategoryID" />
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Bootstrap Modal Container -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modal-body-content">
+            <!-- Partial View sẽ được render vào đây qua AJAX -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Load Form Create/Edit vào Modal
+        function openModal(id) {
+            var url = id ? '/Category/GetCategoryForm/' + id : '/Category/GetCategoryForm';
+            $.get(url, function (data) {
+                $('#modal-body-content').html(data);
+                $('#categoryModal').modal('show');
+            });
+        }
+
+        // Bắt sự kiện submit form bằng AJAX
+        $(document).on('submit', '#categoryForm', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.post(form.attr('action'), form.serialize(), function (res) {
+                if (res.success) {
+                    $('#categoryModal').modal('hide');
+                    location.reload(); // Hoặc dùng AJAX để reload table
+                } else {
+                    $('#modal-body-content').html(res); // Reload form để hiển thị validation errors
+                }
+            });
+        });
+    </script>
+}

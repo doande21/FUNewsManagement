@@ -1,0 +1,68 @@
+﻿@model BusinessObjects.NewsArticle
+@{
+    var tags = ViewBag.Tags as IEnumerable<BusinessObjects.Tag>;
+    var selectedTags = ViewBag.SelectedTags as List<int> ?? new List<int>();
+}
+
+<form id="newsForm" asp-action="SaveNews">
+    <div class="modal-header">
+        <h5 class="modal-title">@(string.IsNullOrEmpty(Model.NewsArticleID) ? "Create News Article" : "Edit News Article")</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <label>Article ID (e.g. N01)</label>
+            <input asp-for="NewsArticleID" class="form-control" readonly="@(Model.CreatedDate != null)" required /><input asp-for="NewsArticleID" class="form-control" readonly="@(Model.CreatedDate != null)" required />
+            <span asp-validation-for="NewsArticleID" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NewsTitle"></label>
+            <input asp-for="NewsTitle" class="form-control" required/>
+            <span asp-validation-for="NewsTitle" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Headline"></label>
+            <input asp-for="Headline" class="form-control" required/>
+            <span asp-validation-for="Headline" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NewsContent"></label>
+            <textarea asp-for="NewsContent" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="CategoryID">Category</label>
+            <select asp-for="CategoryID" asp-items="ViewBag.Categories" class="form-select">
+                <option value="">-- Select Category --</option>
+            </select>
+        </div>
+        
+        <!-- Multiple Tags Checkboxes -->
+        <div class="mb-3">
+            <label>Tags:</label>
+            <div class="border p-2 rounded">
+                @if(tags != null)
+                {
+                    foreach(var tag in tags)
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="selectedTags" value="@tag.TagID" 
+                                   @(selectedTags.Contains(tag.TagID) ? "checked" : "")>
+                            <label class="form-check-label">@tag.TagName</label>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" asp-for="NewsStatus" value="true">
+            <label class="form-check-label">Is Active</label>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+</form>
+
+<partial name="_ValidationScriptsPartial" />

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<BusinessObjects.SystemAccount>
+@{ ViewData["Title"] = "Manage Accounts"; }
+<h2>System Accounts Management</h2>
+<button class="btn btn-success mb-3" onclick="openAccountModal(null)">Create New Account</button>
+<table class="table table-striped">
+    <thead>
+        <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model) {
+            <tr>
+                <td>@item.AccountID</td>
+                <td>@item.AccountName</td>
+                <td>@item.AccountEmail</td>
+                <td>@(item.AccountRole == 1 ? "Staff" : "Lecturer")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="openAccountModal('@item.AccountID')">Edit</button>
+                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this account?');">
+                        <input type="hidden" name="id" value="@item.AccountID" />
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content" id="acc-modal-body"></div></div>
+</div>
+
+@section Scripts {
+    <script>
+        function openAccountModal(id) {
+            var url = id ? '/SystemAccount/GetAccountForm/' + id : '/SystemAccount/GetAccountForm';
+            $.get(url, function (data) {
+                $('#acc-modal-body').html(data);
+                $('#accountModal').modal('show');
+            });
+        }
+        $(document).on('submit', '#accountForm', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.post(form.attr('action'), form.serialize(), function (res) {
+                if (res.success) { location.reload(); } else { $('#acc-modal-body').html(res); }
+            });
+        });
+    </script>
+}

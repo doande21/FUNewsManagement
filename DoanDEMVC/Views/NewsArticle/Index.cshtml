@@ -1,0 +1,93 @@
+﻿@model IEnumerable<BusinessObjects.NewsArticle>
+@{ ViewData["Title"] = "News Articles"; }
+
+<h2>News Articles</h2>
+
+<!-- Form Lọc / Tìm kiếm (Tất cả Role đều dùng được) -->
+<form method="get" asp-action="Index" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <input type="text" name="searchKeyword" class="form-control" placeholder="Search by Title or Headline..." value="@Context.Request.Query["searchKeyword"]" />
+    </div>
+    <div class="col-md-3">
+        <select name="categoryId" class="form-select" asp-items="ViewBag.Categories">
+            <option value="">-- All Categories --</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
+
+@if (User.IsInRole("Staff"))
+{
+    <button class="btn btn-success mb-3" onclick="openNewsModal(null)">Create New Article</button>
+}
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Headline</th>
+            <th>Category</th>
+            <th>Created Date</th>
+            <th>Status</th>
+            @if (User.IsInRole("Staff")) { <th>Actions</th> }
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="7" class="text-center">No articles found.</td></tr>
+        }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.NewsArticleID</td>
+                <td>@item.NewsTitle</td>
+                <td>@item.Headline</td>
+                <td>@item.Category?.CategoryName</td>
+                <td>@item.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                <td><span class="badge @(item.NewsStatus == true ? "bg-success" : "bg-secondary")">@(item.NewsStatus == true ? "Active" : "Draft")</span></td>
+                
+                @if (User.IsInRole("Staff"))
+                {
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="openNewsModal('@item.NewsArticleID')">Edit</button>
+                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this article?');">
+                            <input type="hidden" name="id" value="@item.NewsArticleID" />
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="newsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="news-modal-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openNewsModal(id) {
+            var url = id ? '/NewsArticle/GetNewsForm/' + id : '/NewsArticle/GetNewsForm';
+            $.get(url, function (data) {
+                $('#news-modal-body').html(data);
+                $('#newsModal').modal('show');
+            });
+        }
+
+        $(document).on('submit', '#newsForm', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.post(form.attr('action'), form.serialize(), function (res) {
+                if (res.success) { location.reload(); } else { $('#news-modal-body').html(res); }
+            });
+        });
+    </script>
+}
